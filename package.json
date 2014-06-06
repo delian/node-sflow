@@ -1,0 +1,26 @@
+{
+  "name": "node-sflow",
+  "version": "0.0.1",
+  "description": "Sflow module to help implementing Node.JS sflow collector",
+  "main": "sflow.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/delian/node-sflow.git"
+  },
+  "keywords": [
+    "sflow",
+    "network",
+    "netflow",
+    "extreme",
+    "foundry"
+  ],
+  "author": "Delian Delchev <delian.delchev@gmail.com> (http://delian.blogspot.com/)",
+  "license": "GPLv2",
+  "bugs": {
+    "url": "https://github.com/delian/node-sflow/issues"
+  },
+  "homepage": "https://github.com/delian/node-sflow"
+}
