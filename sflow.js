@@ -320,97 +320,92 @@ function sflow(cb) {
             return out;
         }
 
-        function sflowDgramDecode() {
-            var buf = msg;
-            var hdr = {};
-            var o = { rinfo: rinfo, header: hdr, flow: {} };
+        var buf = msg;
+        var hdr = {};
+        var o = { rinfo: rinfo, header: hdr, flow: {} };
 
-            hdr.sflowVersion = buf.readUInt32BE(0);
-            hdr.ipVersion = buf.readUInt32BE(4);
-            hdr.ipVersionText = [null,"IPv4","IPv6"][hdr.ipVersion]||"Unknown";
+        hdr.sflowVersion = buf.readUInt32BE(0);
+        hdr.ipVersion = buf.readUInt32BE(4);
+        hdr.ipVersionText = [null,"IPv4","IPv6"][hdr.ipVersion]||"Unknown";
 
-            if (hdr.sflowVersion == 5 && (hdr.ipVersion == 1 || hdr.ipVersion == 2)) {
-                if (hdr.ipVersion == 1) {
-                    hdr.ipAddress = ipv4decode(buf.slice(8));
-                    buf = buf.slice(12);
-                } else {
-                    hdr.ipAddress = ipv6decode(buf.slice(8));
-                    buf = buf.slice(24);
+        if (hdr.sflowVersion == 5 && (hdr.ipVersion == 1 || hdr.ipVersion == 2)) {
+            if (hdr.ipVersion == 1) {
+                hdr.ipAddress = ipv4decode(buf.slice(8));
+                buf = buf.slice(12);
+            } else {
+                hdr.ipAddress = ipv6decode(buf.slice(8));
+                buf = buf.slice(24);
+            }
+
+            hdr.subAgentId = buf.readUInt32BE(0);
+            hdr.sequence = buf.readUInt32BE(4);
+            hdr.uptimeMS = buf.readUInt32BE(8);
+            hdr.samples = buf.readUInt32BE(12);
+
+            buf = buf.slice(16);
+
+            for (var n = hdr.samples;n;n--) {
+                var sHdr = buf.readUInt32BE(0);
+                o.flow = {};
+                o.flow.enterprise = parseInt(sHdr/4096);
+                o.flow.format = sHdr%4096;
+                o.flow.length = buf.readUInt32BE(4);
+
+                if (o.flow.enterprise>0) {
+                    console.log('Unknown enterprise type',o);
+                    throw new Error('Unknown enterprise type');
                 }
 
-                hdr.subAgentId = buf.readUInt32BE(0);
-                hdr.sequence = buf.readUInt32BE(4);
-                hdr.uptimeMS = buf.readUInt32BE(8);
-                hdr.samples = buf.readUInt32BE(12);
+                o.flow.seqNum = buf.readUInt32BE(8);
 
-                buf = buf.slice(16);
-
-                for (var n = hdr.samples;n;n--) {
-                    var sHdr = buf.readUInt32BE(0);
-                    o.flow = {};
-                    o.flow.enterprise = parseInt(sHdr/4096);
-                    o.flow.format = sHdr%4096;
-                    o.flow.length = buf.readUInt32BE(4);
-
-                    if (o.flow.enterprise>0) {
-                        console.log('Unknown enterprise type',o);
-                        throw new Error('Unknown enterprise type');
-                    }
-
-                    o.flow.seqNum = buf.readUInt32BE(8);
-
-                    switch (o.flow.format) {
-                        case 1:
-                            o.flow.sourceIdIndex = buf.readUInt32BE(12) % 0x1000000;
-                            o.flow.sourceIdType = parseInt(buf.readUInt32BE(12) / 0x1000000);
-                            o.flow.sourceIdTypeText = ["ifIndex","smonVlanDataSource","entPhysicalEntry"][o.flow.sourceIdType]||"Unknown";
-                            o.flow.samplingRate = buf.readUInt32BE(16);
-                            o.flow.samplePool = buf.readUInt32BE(20);
-                            o.flow.sampleDrops = buf.readUInt32BE(24);
-                            o.flow.input = buf.readUInt32BE(28);
-                            o.flow.output = buf.readUInt32BE(32);
-                            o.flow.records = readFlowRecords(buf.slice(36));
-                            break;
-                        case 2:
-                            o.flow.sourceIdIndex = buf.readUInt32BE(12) % 0x1000000;
-                            o.flow.sourceIdType = parseInt(buf.readUInt32BE(12) / 0x1000000);
-                            o.flow.sourceIdTypeText = ["ifIndex","smonVlanDataSource","entPhysicalEntry"][o.flow.sourceIdType]||"Unknown";
-                            o.flow.counters = readCounterRecords(buf.slice(16));
-                            break;
-                        case 3:
-                            o.flow.sourceIdType = buf.reasUInt32BE(12);
-                            o.flow.sourceIdIndex = buf.readUInt32BE(16);
-                            o.flow.sourceIdTypeText = ["ifIndex","smonVlanDataSource","entPhysicalEntry"][o.flow.sourceIdType]||"Unknown";
-                            o.flow.samplingRate = buf.readUInt32BE(20);
-                            o.flow.samplePool = buf.readUInt32BE(24);
-                            o.flow.sampleDrops = buf.readUInt32BE(28);
-                            o.flow.inputFormat = buf.readUInt32BE(32);
-                            o.flow.input = buf.readUInt32BE(36);
-                            o.flow.outputFormat = buf.readUInt32BE(40);
-                            o.flow.output = buf.readUInt32BE(44);
-                            o.flow.records = readFlowRecords(buf.slice(48));
-                            break;
-                        case 4:
-                            o.flow.sourceIdType = buf.reasUInt32BE(12);
-                            o.flow.sourceIdIndex = buf.readUInt32BE(16);
-                            o.flow.sourceIdTypeText = ["ifIndex","smonVlanDataSource","entPhysicalEntry"][o.flow.sourceIdType]||"Unknown";
-                            o.flow.counters = readCounterRecords(buf.slice(20));
-                            break;
-                        default:
-                            console.log('Unknown format type',o);
-                            throw new Error('Unknown format type');
-                    }
-
-                    buf = buf.slice(o.flow.length+8);
+                switch (o.flow.format) {
+                    case 1:
+                        o.flow.sourceIdIndex = buf.readUInt32BE(12) % 0x1000000;
+                        o.flow.sourceIdType = parseInt(buf.readUInt32BE(12) / 0x1000000);
+                        o.flow.sourceIdTypeText = ["ifIndex","smonVlanDataSource","entPhysicalEntry"][o.flow.sourceIdType]||"Unknown";
+                        o.flow.samplingRate = buf.readUInt32BE(16);
+                        o.flow.samplePool = buf.readUInt32BE(20);
+                        o.flow.sampleDrops = buf.readUInt32BE(24);
+                        o.flow.input = buf.readUInt32BE(28);
+                        o.flow.output = buf.readUInt32BE(32);
+                        o.flow.records = readFlowRecords(buf.slice(36));
+                        break;
+                    case 2:
+                        o.flow.sourceIdIndex = buf.readUInt32BE(12) % 0x1000000;
+                        o.flow.sourceIdType = parseInt(buf.readUInt32BE(12) / 0x1000000);
+                        o.flow.sourceIdTypeText = ["ifIndex","smonVlanDataSource","entPhysicalEntry"][o.flow.sourceIdType]||"Unknown";
+                        o.flow.counters = readCounterRecords(buf.slice(16));
+                        break;
+                    case 3:
+                        o.flow.sourceIdType = buf.reasUInt32BE(12);
+                        o.flow.sourceIdIndex = buf.readUInt32BE(16);
+                        o.flow.sourceIdTypeText = ["ifIndex","smonVlanDataSource","entPhysicalEntry"][o.flow.sourceIdType]||"Unknown";
+                        o.flow.samplingRate = buf.readUInt32BE(20);
+                        o.flow.samplePool = buf.readUInt32BE(24);
+                        o.flow.sampleDrops = buf.readUInt32BE(28);
+                        o.flow.inputFormat = buf.readUInt32BE(32);
+                        o.flow.input = buf.readUInt32BE(36);
+                        o.flow.outputFormat = buf.readUInt32BE(40);
+                        o.flow.output = buf.readUInt32BE(44);
+                        o.flow.records = readFlowRecords(buf.slice(48));
+                        break;
+                    case 4:
+                        o.flow.sourceIdType = buf.reasUInt32BE(12);
+                        o.flow.sourceIdIndex = buf.readUInt32BE(16);
+                        o.flow.sourceIdTypeText = ["ifIndex","smonVlanDataSource","entPhysicalEntry"][o.flow.sourceIdType]||"Unknown";
+                        o.flow.counters = readCounterRecords(buf.slice(20));
+                        break;
+                    default:
+                        console.log('Unknown format type',o);
+                        throw new Error('Unknown format type');
                 }
-
-            } else console.log('Unknown packet',o);
-
-            return o;
-        }
+                buf = buf.slice(o.flow.length+8);
+            }
+        } else console.log('Unknown packet',o);
 
         sflowDgramDecode(msg);
     });
+
     this.listen = function(port) {
         setTimeout(function() {
             me.server.bind(port);
