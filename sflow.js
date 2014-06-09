@@ -21,7 +21,6 @@ function sflow(cb) {
 
     this.server = dgram.createSocket('udp4');
     this.server.on('message',function(msg,rinfo) {
-        console.log('rinfo',rinfo);
 
         function readFlowRecords(buf) {
             var out = [];
@@ -328,8 +327,6 @@ function sflow(cb) {
         hdr.ipVersion = buf.readUInt32BE(4);
         hdr.ipVersionText = [null,"IPv4","IPv6"][hdr.ipVersion]||"Unknown";
 
-        console.log('xxx',o);
-
         if (hdr.sflowVersion == 5 && (hdr.ipVersion == 1 || hdr.ipVersion == 2)) {
             if (hdr.ipVersion == 1) {
                 hdr.ipAddress = ipv4decode(buf.slice(8));
@@ -401,11 +398,14 @@ function sflow(cb) {
                         console.log('Unknown format type',o);
                         throw new Error('Unknown format type');
                 }
+
                 buf = buf.slice(o.flow.length+8);
             }
+
+            if (cb) cb(o);
+
         } else console.log('Unknown packet',o);
 
-        sflowDgramDecode(msg);
     });
 
     this.listen = function(port) {
