@@ -328,6 +328,8 @@ function sflow(cb) {
         hdr.ipVersion = buf.readUInt32BE(4);
         hdr.ipVersionText = [null,"IPv4","IPv6"][hdr.ipVersion]||"Unknown";
 
+        console.log('xxx',o);
+
         if (hdr.sflowVersion == 5 && (hdr.ipVersion == 1 || hdr.ipVersion == 2)) {
             if (hdr.ipVersion == 1) {
                 hdr.ipAddress = ipv4decode(buf.slice(8));
