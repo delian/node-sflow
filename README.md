@@ -24,12 +24,11 @@ Therefore the SFlow collector receives packets as "raw record" which does not co
 This SFlow library does not do that for you! If you receive raw packets you have to decode it on your own as the decoding of it is not part of the SFlow protocol and I like to keep the libraries simple and separated!
 
 However, the decode if raw packet header is not a complex thing. Node.JS NPM provides you with a lot of helpful tools for it. I am sure you will find the best one fitting your needs.
-If you are confused, you can look at this simple example:
+If you are confused, you can look at this simple example, where I use the pcap module to decode raw ethernet packets received over SFlow:
 
 
     var Collector = require('node-sflow');
     var pcap = require('pcap');
-
     Collector(function(flow) {
         if (flow && flow.flow.records && flow.flow.records.length>0) {
             flow.flow.records.forEach(function(n) {
