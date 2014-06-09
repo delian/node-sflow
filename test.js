@@ -5,4 +5,4 @@ var Collector = require('./sflow.js');
 
 Collector(function(msg) {
     console.log(msg);
-}).listen(3000);
+}).listen(6344);
