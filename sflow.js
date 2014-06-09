@@ -368,7 +368,6 @@ function sflow(cb) {
                         o.flow.input = buf.readUInt32BE(28);
                         o.flow.output = buf.readUInt32BE(32);
                         o.flow.records = readFlowRecords(buf.slice(36));
-                        console.log('records',o, o.flow.records);
                         break;
                     case 2:
                         o.flow.sourceIdIndex = buf.readUInt32BE(12) % 0x1000000;
