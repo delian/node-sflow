@@ -1,7 +1,7 @@
 /**
  * Created by delian
  */
-
+var debug = require('debug')('sflow');
 var dgram = require('dgram');
 
 function ipv4decode(buf) {
@@ -31,9 +31,15 @@ function sflow(cb) {
             for (buf = buf.slice(4);n;n--) {
                 var flow = {};
                 flow.format = buf.readUInt32BE(0);
+                flow.enterprise = parseInt(flow.format/4096);
+                flow.format = flow.format%4096;
                 flow.length = buf.readUInt32BE(4);
                 //flow.data = buf.slice(8,8+flow.length);
-
+                if(flow.enterprise !== 0) {
+                    debug('unknown enterprise', flow);
+                    flow.type='unknown';
+                    flow.data = buf.slice(8, 8+flow.length);
+                }
                 switch (flow.format) {
                     case 1:
                         flow.type = "raw";
