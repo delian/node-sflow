@@ -23,6 +23,7 @@
     "url": "https://github.com/delian/node-sflow/issues"
   },
   "dependencies": {
+    "debug": "^1.0.2"
   },
   "homepage": "https://github.com/delian/node-sflow"
 }
