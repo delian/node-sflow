@@ -49,7 +49,7 @@ If you are confused, you can look at this simple example, where I use the pcap m
     }).listen(3000);
 
 
-In the given above example, I use an integrated feature in the node-pcap module to decode the raw packet content. However, node-pcap module currently works only with Node.JS 0.10-0.12 and do not support the new C++ interface introduced in Node.JS 4 and 5. If you want to use Node.JS 4 and 5, try node-pcap2 module there. And the API is a bit different:
+In the given above example, I use an integrated feature in the node-pcap module to decode the raw packet content. However, node-pcap module currently works only with Node.JS 0.10-0.12 and do not support the new C++ interface introduced in Node.JS 4 and 5. If you want to use Node.JS 4 and 5, try node-pcap2 module there. And the API is a bit different (the decoder expects PCAP header too):
 
 
     var Collector = require('node-sflow');
@@ -59,11 +59,18 @@ In the given above example, I use an integrated feature in the node-pcap module 
             flow.flow.records.forEach(function(n) {
                 if (n.type == 'raw') {
                     if (n.protocolText == 'ethernet') {
-                        try {
-                            var pkt = pcap.decode(n.header);
-                            if (pkt.ethertype!=2048) return;
-                            console.log('VLAN',pkt.vlan,'Packet',pkt.payload.IPv4)
-                        } catch(e) { console.log(e); }
+                        var pcapDummyHeader = new Buffer(16);
+                        pcapDummyHeader.writeUInt32LE((new Date()).getTime()/1000,0); // Dummy time, you can take it from the sflow if you like
+                        pcapDummyHeader.writeUInt32LE((new Date()).getTime()%1000,4);
+                        pcapDummyHeader.writeUInt32LE(n.header.length,8);
+                        pcapDummyHeader.writeUInt32LE(rawPacket.buf.length,12);
+                        var pkt = pcap.decode.packet({
+                           buf: n.header,
+                           header: pcapDummyHeader,
+                           link_type: 'LINKTYPE_ETHERNET'
+                        });
+                        if (pkt.ethertype!=2048) return; // Check if it is IPV4 packet
+                        console.log('VLAN',pkt.vlan,'Packet',pkt.payload.IPv4)
                     }
                 }
             });
