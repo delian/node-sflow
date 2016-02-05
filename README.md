@@ -3,7 +3,7 @@ node-sflow
 
 SFlow compatible library
 
-The library is still under development, please be careful! It has been tested with Extreme XOS only! Please raise issues in case of problem!
+The library is still under development, please be careful! It has been tested with Extreme XOS only! Please raise issues in case of a problem!
 
 ## Usage
 
@@ -17,17 +17,16 @@ The usage of the Sflow collector library is very very simple. You just have to d
     }).listen(3000);
 
 
-Keep in mind that even SFlow is very powerful protocol (better than NetFlow, even compared to NetFlow version 9) the implementation of it is usually very limited.
+Keep in mind that even SFlow is a very powerful protocol (in many cases better than NetFlow, even if it is compared to NetFlow version 9) the implementation of the protocol is usually very limited by the hardware vendor.
 
-This module decodes to JSON the SFlow information provided by the SFlow source. If that is a decent source, the packet information could be already decoded in sflow properties and you will receive it decoded to JSON by this module.
+This module only decodes to JSON the SFlow information provided by the SFlow source. If that is a decent source, the packet information, including L2, L3, L4 properties will be present as SFlow properties and you will have it decoded to JSON by this module.
 
-However, many simple Ethernet switchies does not really implement SFlow. They just encapsulate (usually the first 64 bytes of an) Ethernet packet into SFlow container and send it to the collector. If you have that case, then you will get the Ethernet packet as data and its properties will not be decided by this SFlow module as the SFlow collector receives packets as "raw record" which does not contain properties as IP addresses, ports, etc, and you have to decode the packet on your own.
+However, many simple Ethernet switchies does not really implement SFlow. They just use it as a transport protocol and just encapsulate (usually the first 64 bytes of an) Ethernet packet on top of SFlow container and then send it to the collector. 
+If your case is this one, then you will just receive Ethernet packet as raw data and you will not have the L2, L3, L4 properties decoded and you have to decode the Ethernet packet on your own.
 
-If you receive raw packets you have to decode the packet separately if you want to access and read its properties!
+Luckily, decoding raw Ethernet (or other) packets into JSON is realtively easy task, as there are a lot of NPM modules you could use to do that. Node.JS NPM provides you with a lot of helpful tools for it. I am sure you will find the best one fitting your needs.
 
-However, the decode if raw packet header is not a complex thing. Node.JS NPM provides you with a lot of helpful tools for it. I am sure you will find the best one fitting your needs.
-
-If you are confused, you can look at this simple example, where I use the pcap module to decode raw ethernet packets received over SFlow:
+If you are confused, you can look at this simple example, where I use the pcap module to decode raw ethernet packets received over SFlow (the following example uses the pcap module for Node.JS 0.12 to decode the ethernet fames):
 
 
     var Collector = require('node-sflow');
@@ -49,7 +48,7 @@ If you are confused, you can look at this simple example, where I use the pcap m
     }).listen(3000);
 
 
-In the given above example, I use an integrated feature in the node-pcap module to decode the raw packet content. However, node-pcap module currently works only with Node.JS 0.10-0.12 and do not support the new C++ interface introduced in Node.JS 4 and 5. If you want to use Node.JS 4 and 5, try node-pcap2 module there. And the API is a bit different (the decoder expects PCAP header too):
+In the above example, I use an integrated feature in the node-pcap module to decode the raw packet content. However, node-pcap module currently works only with Node.JS 0.10-0.12 and do not support the new C++ interface introduced in Node.JS 4 and 5. If you want to use Node.JS 4 and 5, try node-pcap2 module there. The API is a bit different (the decoder expects PCAP header too), but is not as much different. The following example works with node-pcap2 module for Node 4 and 5:
 
 
     var Collector = require('node-sflow');
