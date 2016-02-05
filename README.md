@@ -63,7 +63,7 @@ In the given above example, I use an integrated feature in the node-pcap module 
                         pcapDummyHeader.writeUInt32LE((new Date()).getTime()/1000,0); // Dummy time, you can take it from the sflow if you like
                         pcapDummyHeader.writeUInt32LE((new Date()).getTime()%1000,4);
                         pcapDummyHeader.writeUInt32LE(n.header.length,8);
-                        pcapDummyHeader.writeUInt32LE(rawPacket.buf.length,12);
+                        pcapDummyHeader.writeUInt32LE(n.frameLen,12);
                         var pkt = pcap.decode.packet({
                            buf: n.header,
                            header: pcapDummyHeader,
