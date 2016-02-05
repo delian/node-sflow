@@ -31,7 +31,7 @@ If you are confused, you can look at this simple example, where I use the pcap m
 
 
     var Collector = require('node-sflow');
-    var pcap = require('pcap2');
+    var pcap = require('pcap');
     Collector(function(flow) {
         if (flow && flow.flow.records && flow.flow.records.length>0) {
             flow.flow.records.forEach(function(n) {
@@ -48,5 +48,25 @@ If you are confused, you can look at this simple example, where I use the pcap m
         }
     }).listen(3000);
 
-NOTE:
-In the given example above I am using pcap2 node module! It is basically the same as the pcap module, although it is patched to support the new C++ interface within Node.JS 4 and 5. If you are using Node 4/5+ you have to use pcap2. If you are using Node 0.09-0.12, you have to use the pcap module to decode raw ethernet packet.
+
+In the given above example, I use an integrated feature in the node-pcap module to decode the raw packet content. However, node-pcap module currently works only with Node.JS 0.10-0.12 and do not support the new C++ interface introduced in Node.JS 4 and 5. If you want to use Node.JS 4 and 5, try node-pcap2 module there. And the API is a bit different:
+
+
+    var Collector = require('node-sflow');
+    var pcap = require('pcap2');
+    Collector(function(flow) {
+        if (flow && flow.flow.records && flow.flow.records.length>0) {
+            flow.flow.records.forEach(function(n) {
+                if (n.type == 'raw') {
+                    if (n.protocolText == 'ethernet') {
+                        try {
+                            var pkt = pcap.decode(n.header);
+                            if (pkt.ethertype!=2048) return;
+                            console.log('VLAN',pkt.vlan,'Packet',pkt.payload.IPv4)
+                        } catch(e) { console.log(e); }
+                    }
+                }
+            });
+        }
+    }).listen(3000);
+
