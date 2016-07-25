@@ -69,7 +69,7 @@ In the above example, I use an integrated feature in the node-pcap module to dec
                            link_type: 'LINKTYPE_ETHERNET'
                         });
                         if (pkt.payload.ethertype!=2048) return; // Check if it is IPV4 packet
-                        console.log('Packet',pkt,'IP',pkt.payload.IPv4)
+                        console.log('Packet',pkt)
                     }
                 }
             });
