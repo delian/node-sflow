@@ -28,6 +28,6 @@
   "homepage": "https://github.com/delian/node-sflow",
   "devDependencies": {
     "chai": "^1.9.1",
-    "mocha": "^8.2.1"
+    "mocha": "^10.1.0"
   }
 }
